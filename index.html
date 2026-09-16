@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard local para acompanhamento de chamados do Call Center">
+  <title>Cemig Saúde · Dashboard de Chamados</title>
+  <link rel="icon" href="assets/logo-cemig-saude-mark.png" type="image/png">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="top-accent" aria-hidden="true"></div>
+  <header class="app-header">
+    <div class="header-content">
+      <div class="brand-lockup">
+        <img class="brand-logo" src="assets/logo-cemig-saude.png" alt="Cemig Saúde">
+        <span class="brand-divider" aria-hidden="true"></span>
+        <div>
+          <p class="eyebrow">GRR · Call Center</p>
+          <h1>Dashboard de Chamados</h1>
+        </div>
+      </div>
+      <button id="reset-button" class="secondary-button" type="button" hidden>
+        Carregar nova planilha
+      </button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section id="upload-view" class="upload-view" aria-labelledby="upload-title">
+      <div class="upload-panel">
+        <img class="upload-logo" src="assets/logo-cemig-saude.png" alt="Cemig Saúde">
+        <p class="eyebrow">Uso interno · Cemig Saúde</p>
+        <h2 id="upload-title">Carregue a planilha de chamados</h2>
+        <p class="upload-description">
+          Arraste o arquivo para esta área ou selecione-o no computador.
+          Os dados são processados somente neste navegador.
+        </p>
+
+        <label id="drop-zone" class="drop-zone" for="file-input" tabindex="0">
+          <span class="drop-zone-title">Solte a planilha aqui</span>
+          <span class="drop-zone-divider">ou</span>
+          <span class="primary-button">Selecionar arquivo</span>
+          <span class="file-types">Formatos aceitos: .xlsx, .xls e .ods</span>
+        </label>
+        <input id="file-input" class="visually-hidden" type="file" accept=".xlsx,.xls,.ods">
+
+        <div id="loading-message" class="status-message loading-message" role="status" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          Processando a planilha…
+        </div>
+        <div id="error-message" class="status-message error-message" role="alert" hidden></div>
+      </div>
+    </section>
+
+    <section id="dashboard-view" class="dashboard-view" aria-labelledby="dashboard-title" hidden>
+      <div class="dashboard-heading">
+        <div>
+          <p class="eyebrow">Visão geral</p>
+          <h2 id="dashboard-title">Indicadores dos chamados</h2>
+        </div>
+        <p id="loaded-at" class="loaded-at"></p>
+      </div>
+
+      <form id="filter-bar" class="filter-bar" aria-label="Escopo dos indicadores">
+        <p class="filter-help">
+          Os números consideram os chamados enviados ao responsável no período, setor e responsável selecionados.
+        </p>
+        <div class="filter-controls">
+          <div class="filter-group">
+            <label for="filter-start-date">Data inicial</label>
+            <input id="filter-start-date" type="date">
+          </div>
+          <div class="filter-group">
+            <label for="filter-end-date">Data final</label>
+            <input id="filter-end-date" type="date">
+          </div>
+          <button id="filter-today-button" class="ghost-button" type="button">
+            Hoje
+          </button>
+          <div class="filter-group filter-group-wide">
+            <label for="filter-subgroup">Setor (subgrupo)</label>
+            <select id="filter-subgroup">
+              <option value="">Todos os setores</option>
+            </select>
+          </div>
+          <div class="filter-group filter-group-wide">
+            <label for="filter-owner">Responsável</label>
+            <select id="filter-owner">
+              <option value="">Todos os responsáveis</option>
+            </select>
+          </div>
+          <fieldset class="status-fieldset">
+            <legend>Status</legend>
+            <label class="status-option">
+              <input class="status-filter" type="checkbox" value="PENDENTE" checked>
+              Pendente
+            </label>
+            <label class="status-option">
+              <input class="status-filter" type="checkbox" value="EM TRATATIVA" checked>
+              Em tratativa
+            </label>
+            <label class="status-option">
+              <input class="status-filter" type="checkbox" value="ENCERRADO" checked>
+              Encerrado
+            </label>
+          </fieldset>
+        </div>
+        <p id="filter-empty-message" class="filter-empty" hidden>
+          Nenhum status, setor ou responsável válido foi selecionado. Ajuste os filtros para ver os chamados.
+        </p>
+      </form>
+
+      <div class="cards-grid" aria-label="Indicadores">
+        <article class="metric-card metric-blue">
+          <span id="received-label" class="metric-label">Recebidos hoje</span>
+          <strong id="count-received-today" class="metric-value">0</strong>
+          <span id="received-caption" class="metric-caption">Enviados ao responsável na data atual</span>
+        </article>
+        <article class="metric-card metric-red">
+          <span class="metric-label">Recebidos em atraso</span>
+          <strong id="count-received-late" class="metric-value">0</strong>
+          <span class="metric-caption">Marcados como “em atraso”</span>
+        </article>
+        <article class="metric-card metric-yellow">
+          <span class="metric-label">Em aberto</span>
+          <strong id="count-open" class="metric-value">0</strong>
+          <span class="metric-caption">Pendentes ou em tratativa</span>
+        </article>
+        <article class="metric-card metric-orange">
+          <span class="metric-label">Vencendo hoje</span>
+          <strong id="count-due-today" class="metric-value">0</strong>
+          <span class="metric-caption">Marcados como “vence hoje”</span>
+        </article>
+        <article class="metric-card metric-red">
+          <span class="metric-label">Fora do prazo</span>
+          <strong id="count-overdue" class="metric-value">0</strong>
+          <span class="metric-caption">Prazo vencido e não encerrados</span>
+        </article>
+      </div>
+
+      <div id="details-container" class="details-container"></div>
+
+      <footer class="dashboard-footer">
+        <p id="invalid-dates-message"></p>
+        <p>A planilha é processada localmente e não é enviada para servidores.</p>
+      </footer>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <img class="footer-logo" src="assets/logo-cemig-saude.png" alt="Cemig Saúde">
+    <p>Uso interno · Gerência de Relacionamento com a Rede · Call Center</p>
+  </footer>
+
+  <noscript>
+    <p class="noscript-message">Ative o JavaScript para utilizar o dashboard.</p>
+  </noscript>
+</body>
+</html>
