@@ -25,16 +25,16 @@ const STATUS_VALUES = Object.freeze(["PENDENTE", "EM TRATATIVA", "ENCERRADO"]);
 const EMPTY_FILTER_VALUE = "__EMPTY__";
 
 const TABLE_COLUMNS = Object.freeze([
-  { key: COLUMNS.callNumber, label: "Número Call Center" },
-  { key: COLUMNS.personName, label: "Prestador / Beneficiário" },
-  { key: COLUMNS.subject, label: "Assunto" },
-  { key: COLUMNS.demandType, label: "Tipo de demanda" },
-  { key: COLUMNS.subgroup, label: "Subgrupo" },
-  { key: COLUMNS.owner, label: "Responsável" },
-  { key: COLUMNS.status, label: "Status" },
-  { key: COLUMNS.openedAt, label: "Data de abertura", type: "date" },
-  { key: COLUMNS.sentToOwnerAt, label: "Enviado ao responsável", type: "date" },
-  { key: COLUMNS.deadline, label: "Prazo máximo", type: "date" }
+  { key: COLUMNS.callNumber, label: "Número Call Center", cellClass: "cell-id" },
+  { key: COLUMNS.personName, label: "Prestador / Beneficiário", cellClass: "cell-text" },
+  { key: COLUMNS.subject, label: "Assunto", cellClass: "cell-text cell-subject" },
+  { key: COLUMNS.demandType, label: "Tipo de demanda", cellClass: "cell-text" },
+  { key: COLUMNS.subgroup, label: "Subgrupo", cellClass: "cell-text" },
+  { key: COLUMNS.owner, label: "Responsável", cellClass: "cell-text" },
+  { key: COLUMNS.status, label: "Status", cellClass: "cell-status" },
+  { key: COLUMNS.openedAt, label: "Data de abertura", type: "date", cellClass: "cell-date" },
+  { key: COLUMNS.sentToOwnerAt, label: "Enviado ao responsável", type: "date", cellClass: "cell-date" },
+  { key: COLUMNS.deadline, label: "Prazo máximo", type: "date", cellClass: "cell-date" }
 ]);
 
 const CATEGORY_CONFIG = Object.freeze([
@@ -734,6 +734,7 @@ function createDetailSection(category, records, noStatusSelected = false) {
   for (const column of TABLE_COLUMNS) {
     const header = document.createElement("th");
     header.scope = "col";
+    header.className = column.cellClass;
     header.textContent = column.label;
     headerRow.append(header);
   }
@@ -748,10 +749,10 @@ function createDetailSection(category, records, noStatusSelected = false) {
     for (const column of TABLE_COLUMNS) {
       const cell = document.createElement("td");
       const rawValue = record[column.key];
+      cell.className = column.cellClass;
 
       if (column.type === "date") {
         const parsedDate = record.__parsedDates[column.key];
-        cell.className = "cell-date";
         cell.textContent = parsedDate ? parsedDate.toLocaleDateString("pt-BR") : "—";
       } else {
         cell.textContent = rawValue == null || String(rawValue).trim() === ""
